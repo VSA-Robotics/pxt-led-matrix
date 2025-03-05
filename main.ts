@@ -135,14 +135,6 @@ namespace LedMatrix {
     }
 
     /**
-     * Update the display to reflect the current buffer.
-     */
-    //% block="update display"
-    export function updateDisplay() {
-        showRows(matrixBuffer);
-    }
-
-    /**
      * Clear the display, turning all LEDs off.
      */
     //% block="clear display"
