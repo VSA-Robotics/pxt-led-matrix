@@ -163,8 +163,7 @@ namespace LedMatrix {
 
     // Helper function for scrolling text
     function getMessageBitmap(text: string): number[] {
-        let bitmap: number[] = [];
-        for (let i = 0; i < 16; i++) bitmap.push(0);
+        let bitmap: number[] = new Array(16).fill(0);
         for (let char of text) {
             if (font[char]) {
                 bitmap = bitmap.concat(font[char]);
