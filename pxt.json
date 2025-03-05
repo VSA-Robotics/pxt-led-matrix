@@ -1,0 +1,12 @@
+{
+    "name": "led-matrix",
+    "description": "An extension for controlling an LED matrix",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "main.ts",
+        "README.md"
+    ],
+    "public": true
+}
