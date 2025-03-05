@@ -8,7 +8,7 @@ namespace LedMatrix {
         matrixBuffer.push(0);  // Initialize 16-column buffer for 8x16 matrix
     }
 
-    // Font definition for scrolling text (5 columns per character, 8 rows high)
+    // Expanded font definition for scrolling text (5 columns per character)
     const font: { [key: string]: number[] } = {
         'A': [0x1C, 0x22, 0x22, 0x3E, 0x22],
         'B': [0x3C, 0x22, 0x3C, 0x22, 0x3C],
@@ -17,9 +17,11 @@ namespace LedMatrix {
         'E': [0x3E, 0x20, 0x3C, 0x20, 0x3E],
         'H': [0x22, 0x22, 0x3E, 0x22, 0x22],
         'L': [0x20, 0x20, 0x20, 0x20, 0x3E],
-        'O': [0x1C, 0x22, 0x22, 0x22, 0x1C],
-        'W': [0x22, 0x22, 0x2A, 0x2A, 0x14],
+        'M': [0x22, 0x36, 0x2A, 0x22, 0x22],
+        'T': [0x3E, 0x08, 0x08, 0x08, 0x08],
         'R': [0x3C, 0x22, 0x3C, 0x28, 0x24],
+        'I': [0x08, 0x08, 0x08, 0x08, 0x08],
+        'X': [0x22, 0x14, 0x08, 0x14, 0x22],
         ' ': [0x00, 0x00, 0x00, 0x00, 0x00]
     };
 
@@ -224,10 +226,10 @@ namespace LedMatrix {
             } else {
                 bitmap = bitmap.concat(font[' ']);
             }
-            bitmap.push(0);
+            bitmap.push(0); // Space between characters
         }
-        if (text.length > 0) bitmap.pop();
-        for (let i = 0; i < 16; i++) bitmap.push(0);
+        if (text.length > 0) bitmap.pop(); // Remove extra space at end
+        for (let i = 0; i < 16; i++) bitmap.push(0); // Padding
         return bitmap;
     }
 
@@ -239,3 +241,20 @@ namespace LedMatrix {
         updateDisplay();
     }
 }
+
+// Test code (outside namespace for user code)
+LedMatrix.initialize(DigitalPin.P0, DigitalPin.P1); // Example initialization with P0 as SCK, P1 as DIN
+
+// Test 2: Draw a cross pattern
+LedMatrix.setLed(3, 7, 1);  // Center
+LedMatrix.setLed(0, 7, 1);  // Top
+LedMatrix.setLed(7, 7, 1);  // Bottom
+LedMatrix.setLed(3, 0, 1);  // Left
+LedMatrix.setLed(3, 15, 1); // Right
+basic.pause(2000);
+LedMatrix.clear();
+
+// Test 3: Draw a 4x3 rectangle
+LedMatrix.drawRectangle(2, 2, 4, 3, 1);
+basic.pause(2000);
+LedMatrix.clear();
