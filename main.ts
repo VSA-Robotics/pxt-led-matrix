@@ -83,7 +83,7 @@ namespace LedMatrix {
         writeBytesToAddress(0, data);
     }
 
-    // Define turnOnScreen only once
+    // Define turnOnScreen only once (private function)
     function turnOnScreen() {
         startSignal();
         sendByte(0b10001000); // Display on, default brightness
@@ -91,7 +91,7 @@ namespace LedMatrix {
         clearScreen();
     }
 
-    // Define updateDisplay only once
+    // Define updateDisplay only once (private function)
     function updateDisplay() {
         showRows(matrixBuffer);
     }
