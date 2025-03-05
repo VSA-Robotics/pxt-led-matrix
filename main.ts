@@ -3,28 +3,26 @@ namespace LedMatrix {
     // Global variables for pins and buffer
     let sckPin: DigitalPin;
     let dinPin: DigitalPin;
-    let matrixBuffer: number[] = new Array(16).fill(0);
+    let matrixBuffer: number[] = [];
+    for (let i = 0; i < 16; i++) {
+        matrixBuffer.push(0);
+    }
 
     // Expanded font definition for scrolling text (5 columns per character)
     const font: { [key: string]: number[] } = {
         'A': [0x1C, 0x22, 0x22, 0x3E, 0x22],
         'B': [0x3C, 0x22, 0x3C, 0x22, 0x3C],
         'C': [0x1C, 0x22, 0x20, 0x22, 0x1C],
-        'H': [0x22, 0x22, 0x3E, 0x22, 0x22],
-        'E': [0x3E, 0x20, 0x3C, 0x20, 0x3E],
-        'L': [0x20, 0x20, 0x20, 0x20, 0x3E],
-        'O': [0x1C, 0x22, 0x22, 0x22, 0x1C],
-        'W': [0x22, 0x22, 0x2A, 0x2A, 0x14],
-        'R': [0x3C, 0x22, 0x3C, 0x28, 0x24],
         'D': [0x3C, 0x22, 0x22, 0x22, 0x3C],
-        ' ': [0x00, 0x00, 0x00, 0x00, 0x00],
-        'a': [0x00, 0x1C, 0x02, 0x1E, 0x22],
-        'b': [0x20, 0x20, 0x3C, 0x22, 0x3C],
-        'c': [0x00, 0x1C, 0x20, 0x20, 0x1C],
-        '1': [0x08, 0x18, 0x08, 0x08, 0x1C],
-        '2': [0x1C, 0x02, 0x1C, 0x20, 0x1C],
-        '3': [0x1C, 0x02, 0x0C, 0x02, 0x1C]
-        // Add more characters as needed
+        'E': [0x3E, 0x20, 0x3C, 0x20, 0x3E],
+        'H': [0x22, 0x22, 0x3E, 0x22, 0x22],
+        'L': [0x20, 0x20, 0x20, 0x20, 0x3E],
+        'M': [0x22, 0x36, 0x2A, 0x22, 0x22],
+        'T': [0x3E, 0x08, 0x08, 0x08, 0x08],
+        'R': [0x3C, 0x22, 0x3C, 0x28, 0x24],
+        'I': [0x08, 0x08, 0x08, 0x08, 0x08],
+        'X': [0x22, 0x14, 0x08, 0x14, 0x22],
+        ' ': [0x00, 0x00, 0x00, 0x00, 0x00]
     };
 
     // Low-level communication functions
@@ -80,7 +78,10 @@ namespace LedMatrix {
     }
 
     function clearScreen() {
-        let data = new Array(16).fill(0);
+        let data: number[] = [];
+        for (let i = 0; i < 16; i++) {
+            data.push(0);
+        }
         writeBytesToAddress(0, data);
     }
 
@@ -141,39 +142,31 @@ namespace LedMatrix {
      */
     //% block="clear display"
     export function clear() {
-        matrixBuffer = new Array(16).fill(0);
-        updateDisplay();
-    }
-
-    /**
-     * Display an 8x16 image on the matrix.
-     * @param image 2D array (8 rows x 16 columns) of 0s and 1s
-     */
-    //% block="display image %image"
-    export function displayImage(image: number[][]) {
-        for (let c = 0; c < 16; c++) {
-            let byteVal = 0;
-            for (let r = 0; r < 8; r++) {
-                if (image[r][c]) byteVal |= (1 << r);
-            }
-            matrixBuffer[c] = byteVal;
+        matrixBuffer = [];
+        for (let i = 0; i < 16; i++) {
+            matrixBuffer.push(0);
         }
         updateDisplay();
     }
 
     // Helper function for scrolling text
     function getMessageBitmap(text: string): number[] {
-        let bitmap: number[] = new Array(16).fill(0);
+        let bitmap: number[] = [];
+        for (let i = 0; i < 16; i++) {
+            bitmap.push(0);
+        }
         for (let char of text) {
             if (font[char]) {
                 bitmap = bitmap.concat(font[char]);
             } else {
                 bitmap = bitmap.concat(font[' ']);
             }
-            bitmap.push(0);
+            bitmap.push(0); // Space between characters
         }
-        if (text.length > 0) bitmap.pop();
-        for (let i = 0; i < 16; i++) bitmap.push(0);
+        if (text.length > 0) bitmap.pop(); // Remove extra space at end
+        for (let i = 0; i < 16; i++) {
+            bitmap.push(0); // Padding for smooth scrolling
+        }
         return bitmap;
     }
 
@@ -219,8 +212,8 @@ namespace LedMatrix {
      */
     //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
     export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
-        for (let c = x; c < x + width; c++) {
-            for (let r = y; r < y + height; r++) {
+        for (let c = x; c < x + width && c < 16; c++) {
+            for (let r = y; r < y + height && r < 8; r++) {
                 setLed(r, c, state);
             }
         }
