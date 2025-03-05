@@ -13,7 +13,7 @@ namespace LedMatrix {
         'A': [0x1C, 0x22, 0x22, 0x3E, 0x22],
         'B': [0x3C, 0x22, 0x3C, 0x22, 0x3C],
         'C': [0x1C, 0x22, 0x20, 0x22, 0x1C],
-        'D': [0x3C, 0x22, 0x22, 0x22, 0x3C],  // Single 'D' definition (fixed duplicate)
+        'D': [0x3C, 0x22, 0x22, 0x22, 0x3C],
         'E': [0x3E, 0x20, 0x3C, 0x20, 0x3E],
         'H': [0x22, 0x22, 0x3E, 0x22, 0x22],
         'L': [0x20, 0x20, 0x20, 0x20, 0x3E],
@@ -83,6 +83,7 @@ namespace LedMatrix {
         writeBytesToAddress(0, data);
     }
 
+    // Define turnOnScreen only once
     function turnOnScreen() {
         startSignal();
         sendByte(0b10001000); // Display on, default brightness
@@ -90,6 +91,7 @@ namespace LedMatrix {
         clearScreen();
     }
 
+    // Define updateDisplay only once
     function updateDisplay() {
         showRows(matrixBuffer);
     }
