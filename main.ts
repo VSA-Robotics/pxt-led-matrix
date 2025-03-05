@@ -1,11 +1,11 @@
 //% color="#AA278D" weight=100
 namespace LedMatrix {
     // Global variables for pins and buffer
-    let sckPin: DigitalPin;  // Serial clock pin
-    let dinPin: DigitalPin;  // Data in pin
+    let sckPin: DigitalPin;  // Serial clock pin for LED matrix
+    let dinPin: DigitalPin;  // Data in pin for LED matrix
     let matrixBuffer: number[] = [];
     for (let i = 0; i < 16; i++) {
-        matrixBuffer.push(0); // Initialize 16-column buffer for 8x16 matrix
+        matrixBuffer.push(0);  // Initialize 16-column buffer for 8x16 matrix
     }
 
     // Font definition for scrolling text (5 columns per character, 8 rows high)
@@ -90,9 +90,12 @@ namespace LedMatrix {
         clearScreen();
     }
 
+    // Private function to update the display
     function updateDisplay() {
         showRows(matrixBuffer);
     }
+
+    // Exported block functions
 
     /**
      * Initialize the LED matrix with specified SCK and DIN pins.
@@ -135,8 +138,51 @@ namespace LedMatrix {
      */
     //% block="clear display"
     export function clear() {
+        matrixBuffer = [];
         for (let i = 0; i < 16; i++) {
-            matrixBuffer[i] = 0;
+            matrixBuffer.push(0);
+        }
+        updateDisplay();
+    }
+
+    /**
+     * Scroll text across the matrix.
+     * @param text String to scroll
+     * @param speed Delay between frames in milliseconds
+     * @param direction Direction to scroll: 0 for left, 1 for right
+     */
+    //% block="scroll text %text|with speed %speed|direction %direction"
+    export function scrollText(text: string, speed: number, direction: number = 0) {
+        let bitmap = getMessageBitmap(text);
+        if (direction === 0) { // Scroll left
+            let maxStartCol = bitmap.length - 16;
+            for (let startCol = 0; startCol <= maxStartCol; startCol++) {
+                displayMessage(bitmap, startCol);
+                basic.pause(speed);
+            }
+        } else { // Scroll right
+            let minStartCol = 0 - 16;
+            for (let startCol = bitmap.length - 16; startCol >= minStartCol; startCol--) {
+                displayMessage(bitmap, startCol);
+                basic.pause(speed);
+            }
+        }
+    }
+
+    /**
+     * Draw a rectangle on the matrix.
+     * @param x Starting column (0–15)
+     * @param y Starting row (0–7)
+     * @param width Width of the rectangle
+     * @param height Height of the rectangle
+     * @param state 1 to turn on, 0 to turn off
+     */
+    //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
+    export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
+        for (let c = x; c < x + width && c < 16; c++) {
+            for (let r = y; r < y + height && r < 8; r++) {
+                setLed(r, c, state);
+            }
         }
         updateDisplay();
     }
@@ -166,48 +212,6 @@ namespace LedMatrix {
             }
         }
         updateDisplay();
-    }
-
-    /**
-     * Draw a rectangle on the matrix.
-     * @param x Starting column (0–15)
-     * @param y Starting row (0–7)
-     * @param width Width of the rectangle
-     * @param height Height of the rectangle
-     * @param state 1 to turn on, 0 to turn off
-     */
-    //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
-    export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
-        for (let c = x; c < x + width && c < 16; c++) {
-            for (let r = y; r < y + height && r < 8; r++) {
-                setLed(r, c, state);
-            }
-        }
-        updateDisplay();
-    }
-
-    /**
-     * Scroll text across the matrix.
-     * @param text String to scroll
-     * @param speed Delay between frames in milliseconds
-     * @param direction Direction to scroll: 0 for left, 1 for right
-     */
-    //% block="scroll text %text|with speed %speed|direction %direction"
-    export function scrollText(text: string, speed: number, direction: number = 0) {
-        let bitmap = getMessageBitmap(text);
-        if (direction === 0) { // Scroll left
-            let maxStartCol = bitmap.length - 16;
-            for (let startCol = 0; startCol <= maxStartCol; startCol++) {
-                displayMessage(bitmap, startCol);
-                basic.pause(speed);
-            }
-        } else { // Scroll right
-            let minStartCol = 0 - 16;
-            for (let startCol = bitmap.length - 16; startCol >= minStartCol; startCol--) {
-                displayMessage(bitmap, startCol);
-                basic.pause(speed);
-            }
-        }
     }
 
     // Helper functions for scrolling text
