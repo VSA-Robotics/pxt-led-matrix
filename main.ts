@@ -241,3 +241,20 @@ namespace LedMatrix {
         updateDisplay();
     }
 }
+
+// Test code (outside namespace for user code)
+LedMatrix.initialize(DigitalPin.P0, DigitalPin.P1); // Example initialization with P0 as SCK, P1 as DIN
+
+// Test 2: Draw a cross pattern
+LedMatrix.setLed(3, 7, 1);  // Center
+LedMatrix.setLed(0, 7, 1);  // Top
+LedMatrix.setLed(7, 7, 1);  // Bottom
+LedMatrix.setLed(3, 0, 1);  // Left
+LedMatrix.setLed(3, 15, 1); // Right
+basic.pause(2000);
+LedMatrix.clear();
+
+// Test 3: Draw a 4x3 rectangle
+LedMatrix.drawRectangle(2, 2, 4, 3, 1);
+basic.pause(2000);
+LedMatrix.clear();
