@@ -5,7 +5,7 @@ namespace LedMatrix {
     let dinPin: DigitalPin;
     let matrixBuffer: number[] = new Array(16).fill(0);
 
-    // Font definition for scrolling text (5 columns per character)
+    // Expanded font definition for scrolling text (5 columns per character)
     const font: { [key: string]: number[] } = {
         'A': [0x1C, 0x22, 0x22, 0x3E, 0x22],
         'B': [0x3C, 0x22, 0x3C, 0x22, 0x3C],
@@ -17,7 +17,13 @@ namespace LedMatrix {
         'W': [0x22, 0x22, 0x2A, 0x2A, 0x14],
         'R': [0x3C, 0x22, 0x3C, 0x28, 0x24],
         'D': [0x3C, 0x22, 0x22, 0x22, 0x3C],
-        ' ': [0x00, 0x00, 0x00, 0x00, 0x00]
+        ' ': [0x00, 0x00, 0x00, 0x00, 0x00],
+        'a': [0x00, 0x1C, 0x02, 0x1E, 0x22],
+        'b': [0x20, 0x20, 0x3C, 0x22, 0x3C],
+        'c': [0x00, 0x1C, 0x20, 0x20, 0x1C],
+        '1': [0x08, 0x18, 0x08, 0x08, 0x1C],
+        '2': [0x1C, 0x02, 0x1C, 0x20, 0x1C],
+        '3': [0x1C, 0x02, 0x0C, 0x02, 0x1C]
         // Add more characters as needed
     };
 
@@ -109,7 +115,10 @@ namespace LedMatrix {
      */
     //% block="set LED at row %row|column %col|to %state"
     export function setLed(row: number, col: number, state: number) {
-        if (row < 0 || row >= 8 || col < 0 || col >= 16) return;
+        if (row < 0 || row >= 8 || col < 0 || col >= 16) {
+            console.log("Error: Row or column out of bounds");
+            return;
+        }
         const hardwareRow = col;
         const hardwareCol = row;
         if (state) {
@@ -178,17 +187,44 @@ namespace LedMatrix {
     }
 
     /**
-     * Scroll text across the matrix from right to left.
+     * Scroll text across the matrix.
      * @param text String to scroll
      * @param speed Delay between frames in milliseconds
+     * @param direction Direction to scroll: 0 for left, 1 for right
      */
-    //% block="scroll text %text|with speed %speed"
-    export function scrollText(text: string, speed: number) {
+    //% block="scroll text %text|with speed %speed|direction %direction"
+    export function scrollText(text: string, speed: number, direction: number = 0) {
         let bitmap = getMessageBitmap(text);
-        let maxStartCol = bitmap.length - 16;
-        for (let startCol = 0; startCol <= maxStartCol; startCol++) {
-            displayMessage(bitmap, startCol);
-            basic.pause(speed);
+        if (direction === 0) { // Scroll left
+            let maxStartCol = bitmap.length - 16;
+            for (let startCol = 0; startCol <= maxStartCol; startCol++) {
+                displayMessage(bitmap, startCol);
+                basic.pause(speed);
+            }
+        } else { // Scroll right
+            let minStartCol = 0 - 16;
+            for (let startCol = bitmap.length - 16; startCol >= minStartCol; startCol--) {
+                displayMessage(bitmap, startCol);
+                basic.pause(speed);
+            }
         }
+    }
+
+    /**
+     * Draw a rectangle on the matrix.
+     * @param x Starting column (0–15)
+     * @param y Starting row (0–7)
+     * @param width Width of the rectangle
+     * @param height Height of the rectangle
+     * @param state 1 to turn on, 0 to turn off
+     */
+    //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
+    export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
+        for (let c = x; c < x + width; c++) {
+            for (let r = y; r < y + height; r++) {
+                setLed(r, c, state);
+            }
+        }
+        updateDisplay();
     }
 }
