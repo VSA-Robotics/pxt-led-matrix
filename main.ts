@@ -1,11 +1,11 @@
 //% color="#AA278D" weight=100
 namespace LedMatrix {
     // Global variables for pins and buffer
-    let sckPin: DigitalPin;  // Serial clock pin for LED matrix
-    let dinPin: DigitalPin;  // Data in pin for LED matrix
+    let sckPin: DigitalPin;  // Serial clock pin
+    let dinPin: DigitalPin;  // Data in pin
     let matrixBuffer: number[] = [];
     for (let i = 0; i < 16; i++) {
-        matrixBuffer.push(0);  // Initialize 16-column buffer for 8x16 matrix
+        matrixBuffer.push(0); // Initialize 16-column buffer for 8x16 matrix
     }
 
     // Font definition for scrolling text (5 columns per character, 8 rows high)
@@ -83,7 +83,6 @@ namespace LedMatrix {
         writeBytesToAddress(0, data);
     }
 
-    // Define turnOnScreen only once (private function)
     function turnOnScreen() {
         startSignal();
         sendByte(0b10001000); // Display on, default brightness
@@ -91,12 +90,9 @@ namespace LedMatrix {
         clearScreen();
     }
 
-    // Define updateDisplay only once (private function)
     function updateDisplay() {
         showRows(matrixBuffer);
     }
-
-    // Exported block functions
 
     /**
      * Initialize the LED matrix with specified SCK and DIN pins.
@@ -139,50 +135,53 @@ namespace LedMatrix {
      */
     //% block="clear display"
     export function clear() {
-        matrixBuffer = [];
         for (let i = 0; i < 16; i++) {
-            matrixBuffer.push(0);
+            matrixBuffer[i] = 0;
         }
         updateDisplay();
     }
 
     /**
-     * Display an 8x16 image on the matrix.
-     * @param image 2D array (8 rows x 16 columns) of 0s and 1s
+     * Draw a line on the matrix (horizontal or vertical).
+     * @param startRow Starting row (0–7)
+     * @param startCol Starting column (0–15)
+     * @param endRow Ending row (0–7)
+     * @param endCol Ending column (0–15)
      */
-    //% block="display image %image"
-    export function displayImage(image: number[][]) {
-        for (let c = 0; c < 16; c++) {
-            let byteVal = 0;
-            for (let r = 0; r < 8; r++) {
-                if (image[r][c]) byteVal |= (1 << r);
+    //% block="draw line from row %startRow|col %startCol|to row %endRow|col %endCol"
+    export function drawLine(startRow: number, startCol: number, endRow: number, endCol: number) {
+        if (startRow === endRow) {
+            // Horizontal line
+            let minCol = Math.min(startCol, endCol);
+            let maxCol = Math.max(startCol, endCol);
+            for (let col = minCol; col <= maxCol && col < 16; col++) {
+                setLed(startRow, col, 1);
             }
-            matrixBuffer[c] = byteVal;
+        } else if (startCol === endCol) {
+            // Vertical line
+            let minRow = Math.min(startRow, endRow);
+            let maxRow = Math.max(startRow, endRow);
+            for (let row = minRow; row <= maxRow && row < 8; row++) {
+                setLed(row, startCol, 1);
+            }
         }
         updateDisplay();
     }
 
-    // Helper function for scrolling text
-    function getMessageBitmap(text: string): number[] {
-        let bitmap: number[] = [];
-        for (let i = 0; i < 16; i++) bitmap.push(0);
-        for (let char of text) {
-            if (font[char]) {
-                bitmap = bitmap.concat(font[char]);
-            } else {
-                bitmap = bitmap.concat(font[' ']);
+    /**
+     * Draw a rectangle on the matrix.
+     * @param x Starting column (0–15)
+     * @param y Starting row (0–7)
+     * @param width Width of the rectangle
+     * @param height Height of the rectangle
+     * @param state 1 to turn on, 0 to turn off
+     */
+    //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
+    export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
+        for (let c = x; c < x + width && c < 16; c++) {
+            for (let r = y; r < y + height && r < 8; r++) {
+                setLed(r, c, state);
             }
-            bitmap.push(0);
-        }
-        if (text.length > 0) bitmap.pop();
-        for (let i = 0; i < 16; i++) bitmap.push(0);
-        return bitmap;
-    }
-
-    function displayMessage(bitmap: number[], startCol: number) {
-        for (let c = 0; c < 16; c++) {
-            let msgCol = startCol + c;
-            matrixBuffer[c] = (msgCol >= 0 && msgCol < bitmap.length) ? bitmap[msgCol] : 0;
         }
         updateDisplay();
     }
@@ -211,47 +210,27 @@ namespace LedMatrix {
         }
     }
 
-    /**
-     * Draw a rectangle on the matrix.
-     * @param x Starting column (0–15)
-     * @param y Starting row (0–7)
-     * @param width Width of the rectangle
-     * @param height Height of the rectangle
-     * @param state 1 to turn on, 0 to turn off
-     */
-    //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
-    export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
-        for (let c = x; c < x + width && c < 16; c++) {
-            for (let r = y; r < y + height && r < 8; r++) {
-                setLed(r, c, state);
+    // Helper functions for scrolling text
+    function getMessageBitmap(text: string): number[] {
+        let bitmap: number[] = [];
+        for (let i = 0; i < 16; i++) bitmap.push(0);
+        for (let char of text) {
+            if (font[char]) {
+                bitmap = bitmap.concat(font[char]);
+            } else {
+                bitmap = bitmap.concat(font[' ']);
             }
+            bitmap.push(0);
         }
-        updateDisplay();
+        if (text.length > 0) bitmap.pop();
+        for (let i = 0; i < 16; i++) bitmap.push(0);
+        return bitmap;
     }
 
-    /**
-     * Draw a line on the matrix (horizontal or vertical).
-     * @param startRow Starting row (0–7)
-     * @param startCol Starting column (0–15)
-     * @param endRow Ending row (0–7)
-     * @param endCol Ending column (0–15)
-     */
-    //% block="draw line from row %startRow|col %startCol|to row %endRow|col %endCol"
-    export function drawLine(startRow: number, startCol: number, endRow: number, endCol: number) {
-        if (startRow === endRow) {
-            // Horizontal line
-            let minCol = Math.min(startCol, endCol);
-            let maxCol = Math.max(startCol, endCol);
-            for (let col = minCol; col <= maxCol && col < 16; col++) {
-                setLed(startRow, col, 1);
-            }
-        } else if (startCol === endCol) {
-            // Vertical line
-            let minRow = Math.min(startRow, endRow);
-            let maxRow = Math.max(startRow, endRow);
-            for (let row = minRow; row <= maxRow && row < 8; row++) {
-                setLed(row, startCol, 1);
-            }
+    function displayMessage(bitmap: number[], startCol: number) {
+        for (let c = 0; c < 16; c++) {
+            let msgCol = startCol + c;
+            matrixBuffer[c] = (msgCol >= 0 && msgCol < bitmap.length) ? bitmap[msgCol] : 0;
         }
         updateDisplay();
     }
