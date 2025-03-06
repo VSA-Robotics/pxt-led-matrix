@@ -1,5 +1,5 @@
 {
-    "name": "led-matrix",
+    "name": "pxt-led-matrix",
     "version": "0.0.3",
     "description": "An extension for controlling an 8x16 LED matrix on the micro:bit",
     "license": "MIT",
