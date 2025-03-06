@@ -8,10 +8,6 @@
     },
     "files": [
         "main.ts",
-        "test.ts"
-    ],
-    "testFiles": [
-        "test.ts"
     ],
     "public": true
 }
