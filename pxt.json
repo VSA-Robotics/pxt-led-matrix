@@ -1,13 +1,21 @@
 {
-    "name": "pxt-led-matrix",
-    "version": "0.0.2",
-    "description": "A Micro:bit extension for easy joystick direction detection with pull-up support.",
-    "license": "MIT",
+    "name": "led-matrix",
+    "version": "0.0.3",
+    "description": "An extension for controlling an 8x16 LED matrix on the micro:bit",
     "dependencies": {
-        "core": "*"
+        "device": "*",
+        "microphone": "*",
+        "radio": "*"
     },
     "files": [
         "main.ts",
+        "README.md"
     ],
-    "public": true
+    "testFiles": [
+        "test.ts"
+    ],
+    "supportedTargets": [
+        "microbit"
+    ],
+    "preferredEditor": "blocks"
 }
