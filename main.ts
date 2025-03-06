@@ -8,20 +8,34 @@ namespace LedMatrix {
         matrixBuffer.push(0);  // Initialize 16-column buffer for 8x16 matrix
     }
 
-    // Expanded font definition for scrolling text (5 columns per character)
+    // Complete font definition for A-Z and space (5 columns per character, 8 rows high)
     const font: { [key: string]: number[] } = {
         'A': [0x1C, 0x22, 0x22, 0x3E, 0x22],
         'B': [0x3C, 0x22, 0x3C, 0x22, 0x3C],
         'C': [0x1C, 0x22, 0x20, 0x22, 0x1C],
         'D': [0x3C, 0x22, 0x22, 0x22, 0x3C],
         'E': [0x3E, 0x20, 0x3C, 0x20, 0x3E],
+        'F': [0x3E, 0x20, 0x3C, 0x20, 0x20],
+        'G': [0x1C, 0x22, 0x20, 0x26, 0x1A],
         'H': [0x22, 0x22, 0x3E, 0x22, 0x22],
+        'I': [0x08, 0x08, 0x08, 0x08, 0x08],
+        'J': [0x02, 0x02, 0x02, 0x22, 0x1C],
+        'K': [0x22, 0x24, 0x38, 0x24, 0x22],
         'L': [0x20, 0x20, 0x20, 0x20, 0x3E],
         'M': [0x22, 0x36, 0x2A, 0x22, 0x22],
-        'T': [0x3E, 0x08, 0x08, 0x08, 0x08],
+        'N': [0x22, 0x32, 0x2A, 0x26, 0x22],
+        'O': [0x1C, 0x22, 0x22, 0x22, 0x1C],
+        'P': [0x3C, 0x22, 0x3C, 0x20, 0x20],
+        'Q': [0x1C, 0x22, 0x2A, 0x24, 0x1A],
         'R': [0x3C, 0x22, 0x3C, 0x28, 0x24],
-        'I': [0x08, 0x08, 0x08, 0x08, 0x08],
+        'S': [0x1E, 0x20, 0x1C, 0x02, 0x3C],
+        'T': [0x3E, 0x08, 0x08, 0x08, 0x08],
+        'U': [0x22, 0x22, 0x22, 0x22, 0x1C],
+        'V': [0x22, 0x22, 0x14, 0x14, 0x08],
+        'W': [0x22, 0x22, 0x2A, 0x2A, 0x14],
         'X': [0x22, 0x14, 0x08, 0x14, 0x22],
+        'Y': [0x22, 0x14, 0x08, 0x08, 0x08],
+        'Z': [0x3E, 0x04, 0x08, 0x10, 0x3E],
         ' ': [0x00, 0x00, 0x00, 0x00, 0x00]
     };
 
@@ -155,17 +169,50 @@ namespace LedMatrix {
      */
     //% block="scroll text %text|with speed %speed|direction %direction"
     export function scrollText(text: string, speed: number, direction: number = 0) {
-        let bitmap = getMessageBitmap(text);
+        let bitmap: number[] = [];
+        for (let char of text.toUpperCase()) {
+            if (font[char]) {
+                bitmap = bitmap.concat(font[char]);
+            } else {
+                bitmap = bitmap.concat(font[' ']); // Default to space if undefined
+            }
+            bitmap.push(0); // Space between characters
+        }
+        if (text.length > 0) bitmap.pop(); // Remove extra space
+        for (let i = 0; i < 16; i++) bitmap.push(0); // Padding
+
         if (direction === 0) { // Scroll left
-            let maxStartCol = bitmap.length - 16;
-            for (let startCol = 0; startCol <= maxStartCol; startCol++) {
-                displayMessage(bitmap, startCol);
+            for (let startCol = -16; startCol < bitmap.length; startCol++) {
+                clear();
+                for (let col = 0; col < 16; col++) {
+                    let msgCol = startCol + col;
+                    if (msgCol >= 0 && msgCol < bitmap.length) {
+                        let columnData = bitmap[msgCol];
+                        for (let row = 0; row < 8; row++) {
+                            if (columnData & (1 << row)) {
+                                setLed(row, col, 1);
+                            }
+                        }
+                    }
+                }
+                updateDisplay();
                 basic.pause(speed);
             }
         } else { // Scroll right
-            let minStartCol = 0 - 16;
-            for (let startCol = bitmap.length - 16; startCol >= minStartCol; startCol--) {
-                displayMessage(bitmap, startCol);
+            for (let startCol = bitmap.length; startCol >= -16; startCol--) {
+                clear();
+                for (let col = 0; col < 16; col++) {
+                    let msgCol = startCol + col;
+                    if (msgCol >= 0 && msgCol < bitmap.length) {
+                        let columnData = bitmap[msgCol];
+                        for (let row = 0; row < 8; row++) {
+                            if (columnData & (1 << row)) {
+                                setLed(row, col, 1);
+                            }
+                        }
+                    }
+                }
+                updateDisplay();
                 basic.pause(speed);
             }
         }
@@ -215,46 +262,4 @@ namespace LedMatrix {
         }
         updateDisplay();
     }
-
-    // Helper functions for scrolling text
-    function getMessageBitmap(text: string): number[] {
-        let bitmap: number[] = [];
-        for (let i = 0; i < 16; i++) bitmap.push(0);
-        for (let char of text) {
-            if (font[char]) {
-                bitmap = bitmap.concat(font[char]);
-            } else {
-                bitmap = bitmap.concat(font[' ']);
-            }
-            bitmap.push(0); // Space between characters
-        }
-        if (text.length > 0) bitmap.pop(); // Remove extra space at end
-        for (let i = 0; i < 16; i++) bitmap.push(0); // Padding
-        return bitmap;
-    }
-
-    function displayMessage(bitmap: number[], startCol: number) {
-        for (let c = 0; c < 16; c++) {
-            let msgCol = startCol + c;
-            matrixBuffer[c] = (msgCol >= 0 && msgCol < bitmap.length) ? bitmap[msgCol] : 0;
-        }
-        updateDisplay();
-    }
 }
-
-// Test code (outside namespace for user code)
-LedMatrix.initialize(DigitalPin.P0, DigitalPin.P1); // Example initialization with P0 as SCK, P1 as DIN
-
-// Test 2: Draw a cross pattern
-LedMatrix.setLed(3, 7, 1);  // Center
-LedMatrix.setLed(0, 7, 1);  // Top
-LedMatrix.setLed(7, 7, 1);  // Bottom
-LedMatrix.setLed(3, 0, 1);  // Left
-LedMatrix.setLed(3, 15, 1); // Right
-basic.pause(2000);
-LedMatrix.clear();
-
-// Test 3: Draw a 4x3 rectangle
-LedMatrix.drawRectangle(2, 2, 4, 3, 1);
-basic.pause(2000);
-LedMatrix.clear();
