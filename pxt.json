@@ -4,19 +4,13 @@
     "description": "An extension for controlling an 8x16 LED matrix on the micro:bit",
     "license": "MIT",
     "dependencies": {
-        "core": "*",
-        "device": "*"
+        "core": "*"
     },
     "files": [
-        "main.ts",
-        "test.ts"
-    ],
-    "testFiles": [
-        "test.ts"
+        "main.ts"
     ],
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "blocks",
     "public": true
 }
