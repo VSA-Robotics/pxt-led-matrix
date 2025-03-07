@@ -1,11 +1,11 @@
 {
     "name": "led-matrix",
-    "version": "0.0.5",
+    "version": "0.0.6",
     "description": "An extension for controlling an 8x16 LED matrix on the micro:bit",
+    "license": "MIT",
     "dependencies": {
         "device": "*",
-        "microphone": "*",
-        "radio": "*"
+        "core": "*"
     },
     "files": [
         "main.ts",
@@ -17,5 +17,6 @@
     "supportedTargets": [
         "microbit"
     ],
-    "preferredEditor": "blocks"
+    "preferredEditor": "blocks",
+    "public": true
 }
