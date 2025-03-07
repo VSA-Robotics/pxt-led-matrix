@@ -106,34 +106,40 @@ namespace LedMatrix {
         clearScreen();
     }
 
-    // Private function to update the display
     function updateDisplay() {
         showRows(matrixBuffer);
     }
 
     // Exported block functions
-
     /**
      * Initialize the LED matrix with specified SCK and DIN pins.
-     * @param sck Serial clock pin
-     * @param din Data in pin
+     * @param sck The clock pin for the LED matrix.
+     * @param din The data input pin for the LED matrix.
      */
     //% block="initialize LED matrix with SCK %sck and DIN %din"
+    //% sck.fieldEditor="gridpicker"
+    //% sck.fieldOptions.columns=4
+    //% din.fieldEditor="gridpicker"
+    //% din.fieldOptions.columns=4
     export function initialize(sck: DigitalPin, din: DigitalPin) {
         sckPin = sck;
         dinPin = din;
         pins.digitalWritePin(dinPin, 1);
         pins.digitalWritePin(sckPin, 1);
         turnOnScreen();
+        console.log("LED Matrix initialized with SCK:", sck, "DIN:", din);
     }
 
     /**
-     * Set an individual LED in the 8x16 matrix.
-     * @param row Logical row (0–7, top to bottom)
-     * @param col Logical column (0–15, left to right)
-     * @param state 1 to turn on, 0 to turn off
+     * Set the state of an individual LED on the 8x16 matrix.
+     * @param row The row index (0-7).
+     * @param col The column index (0-15).
+     * @param state The state to set (0 for off, 1 for on).
      */
     //% block="set LED at row %row|column %col|to %state"
+    //% row.min=0 row.max=7
+    //% col.min=0 col.max=15
+    //% state.min=0 state.max=1
     export function setLed(row: number, col: number, state: number) {
         if (row < 0 || row >= 8 || col < 0 || col >= 16) {
             console.log("Error: Row or column out of bounds");
@@ -150,7 +156,7 @@ namespace LedMatrix {
     }
 
     /**
-     * Clear the display, turning all LEDs off.
+     * Clear the entire LED matrix display.
      */
     //% block="clear display"
     export function clear() {
@@ -162,12 +168,14 @@ namespace LedMatrix {
     }
 
     /**
-     * Scroll text across the matrix.
-     * @param text String to scroll
-     * @param speed Delay between frames in milliseconds
-     * @param direction Direction to scroll: 0 for left, 1 for right
+     * Scroll text across the LED matrix.
+     * @param text The text to scroll across the display.
+     * @param speed The delay between frames in milliseconds.
+     * @param direction The scroll direction (0 for left, 1 for right).
      */
     //% block="scroll text %text|with speed %speed|direction %direction"
+    //% speed.min=50 speed.max=1000
+    //% direction.min=0 direction.max=1
     export function scrollText(text: string, speed: number, direction: number = 0) {
         let bitmap = getMessageBitmap(text);
         if (direction === 0) { // Scroll left
@@ -186,14 +194,19 @@ namespace LedMatrix {
     }
 
     /**
-     * Draw a rectangle on the matrix.
-     * @param x Starting column (0–15)
-     * @param y Starting row (0–7)
-     * @param width Width of the rectangle
-     * @param height Height of the rectangle
-     * @param state 1 to turn on, 0 to turn off
+     * Draw a rectangle on the LED matrix.
+     * @param x The starting column (0-15).
+     * @param y The starting row (0-7).
+     * @param width The width of the rectangle.
+     * @param height The height of the rectangle.
+     * @param state The state to set (0 for off, 1 for on).
      */
     //% block="draw rectangle at x %x|y %y|width %width|height %height|state %state"
+    //% x.min=0 x.max=15
+    //% y.min=0 y.max=7
+    //% width.min=1 width.max=16
+    //% height.min=1 height.max=8
+    //% state.min=0 state.max=1
     export function drawRectangle(x: number, y: number, width: number, height: number, state: number) {
         for (let c = x; c < x + width && c < 16; c++) {
             for (let r = y; r < y + height && r < 8; r++) {
@@ -204,13 +217,17 @@ namespace LedMatrix {
     }
 
     /**
-     * Draw a line on the matrix (horizontal or vertical).
-     * @param startRow Starting row (0–7)
-     * @param startCol Starting column (0–15)
-     * @param endRow Ending row (0–7)
-     * @param endCol Ending column (0–15)
+     * Draw a line on the LED matrix (horizontal or vertical).
+     * @param startRow The starting row (0-7).
+     * @param startCol The starting column (0-15).
+     * @param endRow The ending row (0-7).
+     * @param endCol The ending column (0-15).
      */
     //% block="draw line from row %startRow|col %startCol|to row %endRow|col %endCol"
+    //% startRow.min=0 startRow.max=7
+    //% startCol.min=0 startCol.max=15
+    //% endRow.min=0 endRow.max=7
+    //% endCol.min=0 endCol.max=15
     export function drawLine(startRow: number, startCol: number, endRow: number, endCol: number) {
         if (startRow === endRow) {
             // Horizontal line
@@ -233,17 +250,17 @@ namespace LedMatrix {
     // Helper functions for scrolling text
     function getMessageBitmap(text: string): number[] {
         let bitmap: number[] = [];
-        for (let i = 0; i < 16; i++) bitmap.push(0);
+        for (let i = 0; i < 16; i++) bitmap.push(0); // Initial padding
         for (let char of text.toUpperCase()) {
             if (font[char]) {
                 bitmap = bitmap.concat(font[char]);
             } else {
-                bitmap = bitmap.concat(font[' ']);
+                bitmap = bitmap.concat(font[' ']); // Default to space if undefined
             }
             bitmap.push(0); // Space between characters
         }
         if (text.length > 0) bitmap.pop(); // Remove extra space at end
-        for (let i = 0; i < 16; i++) bitmap.push(0); // Padding
+        for (let i = 0; i < 16; i++) bitmap.push(0); // Final padding
         return bitmap;
     }
 
@@ -259,22 +276,9 @@ namespace LedMatrix {
 // Test code (outside namespace for user code)
 LedMatrix.initialize(DigitalPin.P0, DigitalPin.P1); // Example initialization with P0 as SCK, P1 as DIN
 
-// Test 1: Scroll "HELLO WORLD"
-LedMatrix.clear();
-LedMatrix.scrollText("HELLO WORLD", 150, 0);
-basic.pause(2000);
-
-// Test 2: Draw a cross pattern
-LedMatrix.clear();
-LedMatrix.setLed(3, 7, 1);  // Center
-LedMatrix.setLed(0, 7, 1);  // Top
-LedMatrix.setLed(7, 7, 1);  // Bottom
-LedMatrix.setLed(3, 0, 1);  // Left
-LedMatrix.setLed(3, 15, 1); // Right
-basic.pause(2000);
-
-// Test 3: Draw a 4x3 rectangle
-LedMatrix.clear();
-LedMatrix.drawRectangle(2, 2, 4, 3, 1);
-basic.pause(2000);
-LedMatrix.clear();
+basic.forever(function () {
+    LedMatrix.clear();
+    LedMatrix.scrollText("HELLO", 150, 0); // Scroll "HELLO" left to right
+    basic.pause(2000);
+    LedMatrix.clear();
+});
